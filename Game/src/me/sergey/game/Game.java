@@ -1,4 +1,4 @@
-package sergey;
+package me.sergey.game;
 
 
 import javafx.application.Application;
