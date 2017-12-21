@@ -9,7 +9,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
  
 public class Game extends Application{
-    private GameLoop gameLoop = new GameLoop();
+    private GameLoop gameLoop;
     
     public static void main(String[] args) {
         launch(args);
@@ -21,6 +21,9 @@ public class Game extends Application{
         
         Label desc = new Label("Press keys and look at stdout");
         
+        long startNanoseconds = System.nanoTime();
+        gameLoop = new GameLoop(startNanoseconds);
+        
         primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, gameLoop);
         primaryStage.addEventFilter(KeyEvent.KEY_RELEASED, gameLoop);
         
@@ -28,5 +31,7 @@ public class Game extends Application{
         root.getChildren().add(desc);
         primaryStage.setScene(new Scene(root, 600, 500));
         primaryStage.show();
+        
+        gameLoop.start();
     }
 }
