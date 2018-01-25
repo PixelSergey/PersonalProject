@@ -2,12 +2,8 @@ package me.sergey.game;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
- 
+
 public class Game extends Application{
     private GameLoop gameLoop;
     
@@ -16,22 +12,9 @@ public class Game extends Application{
     }
     
     @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Hello World!");
-        
-        Label desc = new Label("Press keys and look at stdout");
-        
+    public void start(Stage primaryStage) {        
         long startNanoseconds = System.nanoTime();
-        gameLoop = new GameLoop(startNanoseconds);
-        
-        primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, gameLoop);
-        primaryStage.addEventFilter(KeyEvent.KEY_RELEASED, gameLoop);
-        
-        StackPane root = new StackPane();
-        root.getChildren().add(desc);
-        primaryStage.setScene(new Scene(root, 600, 500));
-        primaryStage.show();
-        
+        gameLoop = new GameLoop(startNanoseconds, primaryStage);
         gameLoop.start();
     }
 }

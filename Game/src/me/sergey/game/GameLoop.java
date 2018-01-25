@@ -1,34 +1,50 @@
 package me.sergey.game;
 
-import java.util.ArrayList;
 import javafx.animation.AnimationTimer;
-import javafx.event.EventHandler;
+import javafx.event.ActionEvent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+import me.sergey.communication.Communicator;
 
-public class GameLoop extends AnimationTimer implements EventHandler<KeyEvent>{
-    private ArrayList<String> keylist = new ArrayList<>();
-    private long startNanoseconds;
+public class GameLoop extends AnimationTimer{
+    private long startNanos;
+    private KeyHandler keyHandler;
+    private Communicator comm;
+    private Label desc;
 
-    GameLoop(long startNanoseconds){
-        this.startNanoseconds = startNanoseconds;
+    public GameLoop(long startNanos, Stage primaryStage){
+        this.startNanos = startNanos;
+        keyHandler = new KeyHandler();
+        
+        comm = new Communicator();
+        
+        primaryStage.setTitle("Functioning controller demo");
+        desc = new Label("Press keys and look at stdout");
+        
+        Button connect = new Button();
+        connect.setText("Connect Controller");
+        connect.setOnAction((ActionEvent event) -> {  // Lambda anonymous class
+            comm.connect();
+        });
+        
+        primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, keyHandler);
+        primaryStage.addEventFilter(KeyEvent.KEY_RELEASED, keyHandler);
+        
+        BorderPane root = new BorderPane();
+        root.setCenter(connect);
+        root.setTop(desc);
+        primaryStage.setScene(new Scene(root, 600, 500));
+        primaryStage.show();
     }
     
     @Override
-    public void handle(long nanoseconds) {
-        System.out.println(keylist);
-    }
-
-    @Override
-    public void handle(KeyEvent e){
-        String key = e.getCode().getName();
-        String type = e.getEventType().getName();
-        
-        if(type.equals("KEY_PRESSED")){
-            if(!keylist.contains(key)){
-                keylist.add(key);
-            }
-        }else if(type.equals("KEY_RELEASED")){
-            keylist.remove(key);
-        }
+    public void handle(long nanos) {
+        desc.setText("Time: " + (float)(nanos-startNanos)/1000000000 + "s" + "\n" +
+                    "Controller: " + comm.receive().toString() + "\n" +
+                    "Keyboard: " + keyHandler.getKeylist());
     }
 }
