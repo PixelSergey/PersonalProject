@@ -5,7 +5,7 @@ import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 
 public class KeyHandler implements EventHandler<KeyEvent>{
-    private ArrayList<String> keylist;
+    private final ArrayList<String> keylist;
     
     public KeyHandler(){
         keylist = new ArrayList<>();

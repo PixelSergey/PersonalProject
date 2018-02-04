@@ -1,50 +1,39 @@
 package me.sergey.game;
 
 import javafx.animation.AnimationTimer;
-import javafx.event.ActionEvent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
+import javafx.scene.canvas.GraphicsContext;
 import me.sergey.communication.Communicator;
 
 public class GameLoop extends AnimationTimer{
-    private long startNanos;
-    private KeyHandler keyHandler;
-    private Communicator comm;
-    private Label desc;
+    private final long startNanos;
+    private final KeyHandler keyHandler;
+    private final GraphicsContext gc;
+    private final Communicator comm;
+    private final GButton connect;
 
-    public GameLoop(long startNanos, Stage primaryStage){
+    public GameLoop(long startNanos, GraphicsContext graphicsContext){
         this.startNanos = startNanos;
-        keyHandler = new KeyHandler();
+        this.gc = graphicsContext;
         
+        keyHandler = new KeyHandler();
+        gc.getCanvas().getScene().setOnKeyPressed(keyHandler);
+        gc.getCanvas().getScene().setOnKeyReleased(keyHandler);
         comm = new Communicator();
         
-        primaryStage.setTitle("Functioning controller demo");
-        desc = new Label("Press keys and look at stdout");
-        
-        Button connect = new Button();
-        connect.setText("Connect Controller");
-        connect.setOnAction((ActionEvent event) -> {  // Lambda anonymous class
-            comm.connect();
-        });
-        
-        primaryStage.addEventFilter(KeyEvent.KEY_PRESSED, keyHandler);
-        primaryStage.addEventFilter(KeyEvent.KEY_RELEASED, keyHandler);
-        
-        BorderPane root = new BorderPane();
-        root.setCenter(connect);
-        root.setTop(desc);
-        primaryStage.setScene(new Scene(root, 600, 500));
-        primaryStage.show();
+        connect = new GButton(gc, "/assets/connect.png", 100, 100) {
+            @Override
+            void clickHandle() {
+                comm.connect();
+            }
+        };
     }
     
     @Override
-    public void handle(long nanos) {
-        desc.setText("Time: " + (float)(nanos-startNanos)/1000000000 + "s" + "\n" +
+    public void handle(long nanos){
+        gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        gc.fillText("Time: " + (float)(nanos-startNanos)/1000000000 + "s" + "\n" +
                     "Controller: " + comm.receive().toString() + "\n" +
-                    "Keyboard: " + keyHandler.getKeylist());
+                    "Keyboard: " + keyHandler.getKeylist(), 5, 15);
+        connect.draw();
     }
 }

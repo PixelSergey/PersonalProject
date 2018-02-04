@@ -1,4 +1,5 @@
 /Game/nbproject/private/
 /Game/build/
-/Controller/models/SketchUp/*.skb
 /Game/dist/
+/Game/test/
+/Controller/models/SketchUp/*.skb
