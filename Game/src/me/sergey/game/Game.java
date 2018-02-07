@@ -16,21 +16,18 @@ public class Game extends Application{
     }
     
     @Override
-    public void start(Stage primaryStage) {        
-        long startNanoseconds = System.nanoTime();
-        
+    public void start(Stage primaryStage) {
         primaryStage.setTitle("Functioning controller demo");
-        primaryStage.setResizable(false);
         
         Group root = new Group();
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         
-        Canvas canvas = new Canvas(600,500);
+        Canvas canvas = new Canvas(1000, 750);
         root.getChildren().add(canvas);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         
-        gameLoop = new GameLoop(startNanoseconds, gc);
+        gameLoop = new GameLoop(System.nanoTime(), gc);
         gameLoop.start();
         
         primaryStage.show();

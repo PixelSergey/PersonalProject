@@ -10,29 +10,22 @@ public abstract class GButton implements EventHandler<MouseEvent>{
     private Image img;
     private int x;
     private int y;
-    private float scale;
     
     public GButton(GraphicsContext gc, String path){
-        this(gc, path, 0, 0, 1);
+        this(gc, path, 0, 0);
     }
     
     public GButton(GraphicsContext gc, String path, int x, int y){
-        this(gc, path, x, y, 1);
-    }
-    
-    public GButton(GraphicsContext gc, String path, int x, int y, float scale){
         this.img = new Image(path);
         this.gc = gc;
-        this.x = x;
-        this.y = y;
-        this.scale = scale;
+        this.x = (int)(x - (img.getWidth()/2));
+        this.y = (int)(y - (img.getHeight()/2));
         
-        this.gc.getCanvas().getScene().setOnMouseClicked(this);
-        this.gc.getCanvas().getScene().setOnMouseMoved(this);
+        this.gc.getCanvas().getScene().addEventHandler(MouseEvent.MOUSE_CLICKED, this);
     }
     
     public void draw(){
-        gc.drawImage(img, x, y, img.getWidth() * scale, img.getHeight() * scale);
+        gc.drawImage(img, x, y);
     }
     
     public void setImg(String path){
@@ -55,11 +48,11 @@ public abstract class GButton implements EventHandler<MouseEvent>{
     @Override
     public void handle(MouseEvent e) {
         if(e.getEventType().getName().equals("MOUSE_CLICKED")){
-            if(e.getX() > x && e.getX() < x + img.getWidth() * scale && e.getY() > y && e.getY() < y + img.getHeight() * scale){
-                clickHandle();
+            if(e.getX() > x && e.getX() < x + img.getWidth() && e.getY() > y && e.getY() < y + img.getHeight()){
+                onClick();
             }
         }
     }
     
-    abstract void clickHandle();
+    abstract void onClick();
 }

@@ -23,6 +23,7 @@ public class Communicator {
         Scanner s;
         
         if(ports.length == 0){
+            System.out.println("No serial devices found.");
             return false;
         }
         
@@ -71,7 +72,10 @@ public class Communicator {
     public HashMap receive(){
         try{
             buttons = gson.fromJson(data.nextLine(), HashMap.class);
-        }catch(NullPointerException e){}catch(Exception e){System.out.println(e.getMessage());}
+        }catch(NullPointerException e){
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
         
         return buttons;
     }

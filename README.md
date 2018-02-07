@@ -14,7 +14,7 @@ and extra files contain personal information.
   - `./GCode/` contains the ready files for printing on an Ultimaker 3
 - `/Game/` contains the game files:
   - The `./src/` folder contains the source code
-  - The `./nbproject/` folder has info for Netbeans
+  - The `./nbproject/` folder has info for the Netbeans IDE
   - The `./lib/` folder contains external libraries not made by me; see the
   `README.md` file in that folder for credits
   - The `./build.xml` file builds the project and supports "fat" (standalone)
@@ -51,7 +51,7 @@ user who needs Java + the Netbeans IDE, install it from
 (although it should be installed by default) using the command line using
 `sudo apt install default-jdk`, Netbeans using `sudo apt install netbeans`
 and JavaFX using `sudo apt install openjfx`. You may also install the JavaFX
-source files for poking around using `sudo apt install openjfx-source`
+source files for poking around using `sudo apt install openjfx-source`.
 
 To run the game, download the latest fat (standalone) jar from the
 [releases page][releases] if it exists. Run it either by double-clicking
