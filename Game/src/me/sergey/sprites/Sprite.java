@@ -22,8 +22,14 @@ public class Sprite extends Base{
         angle = 90;
     }
     
+    public int getFacing(){
+        return angle;
+    }
+    
     public void setFacing(int angle){
-        this.angle = angle;
+        if(angle < 360){
+            this.angle = angle;
+        }
     }
     
     @Override
