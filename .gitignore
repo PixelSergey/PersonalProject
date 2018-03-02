@@ -2,4 +2,5 @@
 /Game/build/
 /Game/dist/
 /Game/test/
+/Game/src/assets/*.xcf
 /Controller/models/SketchUp/*.skb
