@@ -17,7 +17,7 @@ public class Game extends Application{
     
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Functioning controller demo");
+        primaryStage.setTitle("WIP Flying Game");
         
         Group root = new Group();
         Scene scene = new Scene(root);

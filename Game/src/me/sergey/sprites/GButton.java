@@ -10,7 +10,7 @@ public abstract class GButton extends Base implements EventHandler<MouseEvent>{
         this(gc, path, -1, -1);
     }
     
-    public GButton(GraphicsContext gc, String path, int x, int y){
+    public GButton(GraphicsContext gc, String path, double x, double y){
         super(gc, path, x, y);
         this.gc.getCanvas().getScene().addEventHandler(MouseEvent.MOUSE_CLICKED, this);
     }

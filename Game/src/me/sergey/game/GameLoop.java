@@ -1,6 +1,5 @@
 package me.sergey.game;
 
-import me.sergey.sprites.GButton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,9 +7,11 @@ import java.util.List;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 import me.sergey.communication.Communicator;
 import me.sergey.sprites.Sprite;
+import me.sergey.sprites.GButton;
 
 public class GameLoop extends AnimationTimer{
     private final long startNanos;
@@ -26,6 +27,10 @@ public class GameLoop extends AnimationTimer{
     private ArrayList<String> keys;
     private double elapsed;
     private int angle;
+    private double speed;
+    private Image background;
+    private boolean first;
+    private boolean canMove;
     
     public GameLoop(long startNanos, GraphicsContext graphicsContext){
         this.startNanos = startNanos;
@@ -51,6 +56,7 @@ public class GameLoop extends AnimationTimer{
             @Override
             protected void onClick(){
                 stage = 1;
+                first = true;
             }
         };
         
@@ -63,7 +69,8 @@ public class GameLoop extends AnimationTimer{
     @Override
     public void handle(long nanos){
         gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-        gc.drawImage(new Image("/assets/stage_" + stage + ".png"), 0, 0);
+        background = new Image("/assets/stage_" + stage + ".png");
+        gc.drawImage(background, 0, 0);
         inputs = comm.receive();
         keys = keyHandler.getKeylist();
         elapsed = (nanos-startNanos)/1000000000.0;
@@ -77,6 +84,13 @@ public class GameLoop extends AnimationTimer{
             start.draw();
         }
         else if(stage > 0){ // Game Logic
+            if(first){ // Check whether a new stage just loaded
+                player.setXY(75, 350);
+                player.setFacing(90);
+                first = false;
+                canMove = false;
+                return;
+            }
             if(inputs.isEmpty()){ // Controller not connected; use keyboard
                 int hor = 1, ver = 1;
                 if(keys.contains("Up")){
@@ -92,6 +106,12 @@ public class GameLoop extends AnimationTimer{
                     ver++;
                 }
                 angle = directions.get(hor).get(ver);
+                if(angle == 360){
+                    speed = 0;
+                    canMove = true;
+                }else{
+                    speed = 5;
+                }
             }else{ // Controller connected; use controller
                 Double hor, ver;
                 hor = Double.parseDouble((String)inputs.get("joyX"));
@@ -99,11 +119,26 @@ public class GameLoop extends AnimationTimer{
                 if(!(hor == 0.0 && ver == 0.0)){
                     Double temp_angle = Math.toDegrees(Math.atan2(ver, hor));
                     angle = temp_angle.intValue();
+                    speed = Math.sqrt(Math.pow(hor, 2) + Math.pow(ver, 2)) * 0.5;
+                }else{
+                    speed = 0;
+                    canMove = true;
                 }
             }
-            player.setFacing(angle);
-            player.setXY(10, 10);
             
+            if(canMove){
+                player.setFacing(angle);
+                double x = player.getX();
+                double y = player.getY();
+                player.move(angle, speed);
+                if(player.touchesColor(background.getPixelReader(), Color.color(0, 1, 0))){
+                    stage++;
+                    first = true;
+                }
+                if(player.touchesColor(background.getPixelReader(), Color.color(0, 0, 0))){
+                    player.setXY(x, y);
+                }
+            }
             player.draw();
         }
     }
