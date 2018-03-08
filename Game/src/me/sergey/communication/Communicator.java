@@ -8,11 +8,11 @@ import com.google.gson.Gson;
 public class Communicator {
     private SerialPort serialPort;
     private Scanner data;
-    private HashMap buttons;
+    private HashMap<String, String> buttons;
     private final Gson gson;
     
     public Communicator(){
-        buttons = new HashMap();
+        buttons = new HashMap<>();
         gson = new Gson();
     }
     
@@ -36,6 +36,13 @@ public class Communicator {
         s = new Scanner(System.in);
         int chosenPort = s.nextInt();
         
+        try{
+            serialPort = ports[chosenPort - 1];
+        }catch(ArrayIndexOutOfBoundsException e){
+            System.out.println("Invalid port number.");
+            return false;
+        }
+        
         String[] timeouts = {"TIMEOUT_READ_NONBLOCKING","TIMEOUT_READ_SEMI_BLOCKING","TIMEOUT_READ_BLOCKING", "TIMEOUT_SCANNER"};
         System.out.println("Select a timeout: (different for each computer, start by trying TIMEOUT_SCANNER if unsure)");
         i = 1;
@@ -44,8 +51,6 @@ public class Communicator {
         }
         
         int chosenTimeout = s.nextInt();
-        
-        serialPort = ports[chosenPort - 1];
         if(serialPort.openPort()){
             System.out.println("Port opened successfully.");
         }else{

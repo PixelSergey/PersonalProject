@@ -3,4 +3,5 @@
 /Game/dist/
 /Game/test/
 /Game/src/assets/*.xcf
+/Game/src/assets/leaderboard.txt
 /Controller/models/SketchUp/*.skb

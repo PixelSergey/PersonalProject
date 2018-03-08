@@ -27,7 +27,7 @@ public class Game extends Application{
         root.getChildren().add(canvas);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         
-        gameLoop = new GameLoop(System.nanoTime(), gc);
+        gameLoop = new GameLoop(gc);
         gameLoop.start();
         
         primaryStage.show();

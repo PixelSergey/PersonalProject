@@ -5,6 +5,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
 public abstract class GButton extends Base implements EventHandler<MouseEvent>{    
+    private boolean checkClick;
     
     public GButton(GraphicsContext gc, String path){
         this(gc, path, -1, -1);
@@ -16,10 +17,21 @@ public abstract class GButton extends Base implements EventHandler<MouseEvent>{
     }
     
     @Override
+    public void draw(){
+        if(x>=0 && y>=0){
+            gc.drawImage(img, x, y);
+            checkClick = true;
+        }
+    }
+    
+    @Override
     public void handle(MouseEvent e) {
-        if(e.getEventType().getName().equals("MOUSE_CLICKED")){
+        if(checkClick){ // Avoid checking for clicks when the button isn't drawn
+            checkClick = false;
             if(e.getX() > x && e.getX() < x + img.getWidth() && e.getY() > y && e.getY() < y + img.getHeight()){
-                onClick();
+                if(e.getEventType().getName().equals("MOUSE_CLICKED")){
+                    onClick();
+                }
             }
         }
     }
