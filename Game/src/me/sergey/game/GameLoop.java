@@ -57,9 +57,21 @@ public class GameLoop extends AnimationTimer{
         
         try{
             leaderboard = new HashMap<>();
-            File file = new File("src/assets/leaderboard.txt");
-            file.createNewFile();
-            String path = file.getAbsolutePath();
+            
+            String path;
+            String OS = System.getProperty("os.name").toUpperCase();
+            if(OS.contains("WIN")){
+                path = System.getenv("APPDATA") + "\\leaderboard.txt";
+            }else if(OS.contains("MAC")){
+                path = System.getProperty("user.home") + "/Library/Application Support/leaderboard.txt";
+            }else if(OS.contains("NUX")){
+                path = System.getProperty("user.home") + "/.config/leaderboard.txt";
+            }else{
+                path = System.getProperty("user.dir") + "/leaderboard.txt";
+            }
+            File file = new File(path);
+            file.createNewFile(); // Only creates a new file if one doesn't already exist
+            path = file.getAbsolutePath();
             
             read = new FileReader(path);
             char[] c = new char[10000];
