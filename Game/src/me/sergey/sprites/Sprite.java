@@ -36,9 +36,8 @@ public class Sprite extends Base{
     }
 
     public void move(int angle, double speed){
-        setFacing(angle);
-        setX(x + Math.sin(Math.toRadians(this.angle)) * speed);
-        setY(y - Math.cos(Math.toRadians(this.angle)) * speed);
+        setX(x + Math.sin(Math.toRadians(angle)) * speed);
+        setY(y - Math.cos(Math.toRadians(angle)) * speed);
     }
     
     @Override

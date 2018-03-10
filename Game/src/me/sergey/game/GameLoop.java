@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
@@ -30,6 +31,7 @@ public class GameLoop extends AnimationTimer{
     private final GButton quit;
     private final Sprite player;
     private final List<List<Integer>> directions;
+    private final Random random;
     private FileWriter write;
     private FileReader read;
     private int stage;
@@ -37,6 +39,7 @@ public class GameLoop extends AnimationTimer{
     private ArrayList<String> keys;
     private double elapsed;
     private int angle;
+    private int lastHit;
     private double speed;
     private Image background;
     private boolean first;
@@ -117,7 +120,7 @@ public class GameLoop extends AnimationTimer{
             }
         };
         
-        quit = new GButton(gc, "/assets/quit.png", gc.getCanvas().getWidth() - 50, 50){
+        quit = new GButton(gc, "/assets/quit.png", 960, 80){
             @Override
             protected void onClick(){
                 Platform.exit();
@@ -128,6 +131,10 @@ public class GameLoop extends AnimationTimer{
                     Arrays.asList(225, 180, 135),
                     Arrays.asList(270, 360, 90),
                     Arrays.asList(315, 0, 45));
+        
+        random = new Random();
+        first = true;
+        lastHit = -1;
     }
     
     @Override
@@ -150,13 +157,37 @@ public class GameLoop extends AnimationTimer{
             gc.fillText("Debug Info:\n" + 
                     "Controller: " + inputs.toString() + "\n" +
                     "Keyboard: " + keys, 5, 15);
+            
+            if(first){
+                player.setXY(500, 225);
+                speed = 10;
+                angle = random.nextInt(360);
+                first = false;
+            }
+            if(player.getX() < 10 && lastHit != 4){
+                angle = 360 - angle - random.nextInt(16); // Set angle to opposite minus a bit
+                lastHit = 4;
+            }else if (player.getX() + player.getImg().getWidth() > gc.getCanvas().getWidth() - 10 && lastHit != 2){
+                angle = 360 - angle - random.nextInt(16); // Set angle to opposite minus a bit
+                lastHit = 2;
+            }else if(player.getY() < 10 && lastHit != 0){
+                angle = 180 - angle + random.nextInt(16); // Set angle to opposite plus a bit
+                lastHit = 0;
+            }else if(player.getY() + player.getImg().getHeight() > gc.getCanvas().getHeight() - 10 && lastHit != 3){
+                angle = 180 - angle + random.nextInt(16); // Set angle to opposite plus a bit
+                lastHit = 3;
+            }
+            player.move(angle, speed);
+            player.setFacing((int)(nanos/1_700_000.0)%360);
+            
+            player.draw();
             connect.draw();
             start.draw();
             quit.draw();
         }
         
         else if(stage > 0){ // Game Logic
-            elapsed = (nanos-startNanos)/1000000000.0;
+            elapsed = (nanos-startNanos)/1_000_000_000.0;
             if(first){ // Check whether a new stage just loaded
                 player.setXY(75, 350);
                 player.setFacing(90);
@@ -251,8 +282,10 @@ public class GameLoop extends AnimationTimer{
                         }else{
                             err = "Names can only contain letters and numbers";
                         }
+                    }else{
+                        err = "Names can only contain letters and numbers";
                     }
-                    else if(input.equals("Backspace")){
+                    if(input.equals("Backspace")){
                         if(playerName.length() > 0){
                             playerName = playerName.substring(0, playerName.length() - 1);
                             err = "";
@@ -275,6 +308,7 @@ public class GameLoop extends AnimationTimer{
                             }
                         }
                         stage = 0;
+                        first = true;
                         return;
                     }
                 }
