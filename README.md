@@ -1,9 +1,9 @@
 # PersonalProject
 
 A programming project, featuring a Java game and an Arduino controller.
-Done for the IB Personal Project programme. This repository only contains
-files related to the programming parts of the project as the report, journal
-and extra files contain personal information.
+This project is done for the IB Personal Project programme. The
+repository only contains files related to the project itself as the
+report, journal and extra files contain personal information.
 
 ### File rundown:
 
@@ -31,31 +31,40 @@ builds
 ##### Arduino
 Assemble the Arduino controller as follows:
 
-- Potentiometer 1 (Joystick X) to A0
-- Potentiometer 2 (Joystick Y) to A1
-- Button 1 (Joystick push sensor) to digital pin 12 and "pressed down" to 5V
+- Potentiometer 1 (Joystick X) to analog pin A0
+- Potentiometer 2 (Joystick Y) to analog pin A1
+- Button 1 (Joystick push sensor) to digital pin 12 with the pin "pulled down" to 5V
+- The START button to digital pin 10 with the pin "pulled down" to ground
+- The A button to digital pin 10 with the pin "pulled down" to ground
+- The B button to digital pin 9 with the pin "pulled down" to ground
+- The X button to digital pin 7 with the pin "pulled down" to ground
+- The Y button to digital pin 8 with the pin "pulled down" to ground
+- One of the sides of the ON/OFF switch to digital pin 10 with the pin "pulled down" to ground
 
-Upload the `controller.ino` file in the `/Controller/controller/` folder to
+Upload the `controller.ino` file from the `/Controller/controller/` folder to
 your Arduino Uno (other models will likely work too) and connect it with a
 USB cable to the USB port on your computer.
 
 If you would like a shell for your controller, the models are in the
 `/Controller/models/` folder (`./STL/` for the models, `./SketchUp/` for the
-editable SketchUp files or `./GCode/` for ready Ultimaker 3 print files)
+editable SketchUp files or `./GCode/` for ready Ultimaker 3 print files).
+The model requires filing depending on the size of the buttons you are using,
+and a hole drilled in the bottom for the USB cable (I didn't think of modelling
+it originally, unfortunately)
 
 #### PC
 The JavaFX library that I am using for this project should be installed by
-default with Java on Windows, but not always on Linux. If you are a Windows
+default with Java 8 on Windows, but not always on Linux. If you are a Windows
 user who needs Java + the Netbeans IDE, install it from
 [the Java JDK + Netbeans download page][javadl]. Linux users can install Java
 (although it should be installed by default) using the command line using
 `sudo apt install default-jdk`, Netbeans using `sudo apt install netbeans`
 and JavaFX using `sudo apt install openjfx`. You may also install the JavaFX
-source files for poking around using `sudo apt install openjfx-source`.
+source files for reference using `sudo apt install openjfx-source`.
 
 To run the game, download the latest fat (standalone) jar from the
 [releases page][releases] if it exists. Run it either by double-clicking
-or by doing `java -jar Game.jar` using the command prompt/terminal in the
+or by doing `java -jar Game_fat.jar` using the command prompt/terminal in the
 same folder.
 
 If you want to build the latest commit, open it in the Netbeans IDE and 

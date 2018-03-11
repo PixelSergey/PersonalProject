@@ -36,5 +36,5 @@ public abstract class GButton extends Base implements EventHandler<MouseEvent>{
         }
     }
     
-    protected abstract void onClick();
+    public abstract void onClick();
 }

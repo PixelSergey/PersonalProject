@@ -57,6 +57,7 @@ public class GameLoop extends AnimationTimer{
         gc.getCanvas().getScene().setOnKeyReleased(keyHandler);
         
         comm = new Communicator();
+        comm.setDaemon(true);
         
         try{
             leaderboard = new HashMap<>();
@@ -106,14 +107,14 @@ public class GameLoop extends AnimationTimer{
         
         connect = new GButton(gc, "/assets/connect.png", 500, 525){
             @Override
-            protected void onClick(){
-                comm.connect();
+            public void onClick(){
+                comm.start();
             }
         };
         
         start = new GButton(gc, "/assets/start.png", 500, 600){
             @Override
-            protected void onClick(){
+            public void onClick(){
                 stage = 1;
                 first = true;
                 startNanos = System.nanoTime();
@@ -122,7 +123,7 @@ public class GameLoop extends AnimationTimer{
         
         quit = new GButton(gc, "/assets/quit.png", 960, 80){
             @Override
-            protected void onClick(){
+            public void onClick(){
                 Platform.exit();
             }
         };
@@ -148,6 +149,7 @@ public class GameLoop extends AnimationTimer{
             return;
         }
         gc.drawImage(background, 0, 0);
+        
         inputs = comm.receive();
         keys = keyHandler.getKeylist();
         
@@ -162,8 +164,18 @@ public class GameLoop extends AnimationTimer{
                 player.setXY(500, 225);
                 speed = 10;
                 angle = random.nextInt(360);
+                canMove = false;
                 first = false;
             }
+            if(keys.isEmpty() && Collections.frequency(inputs.values(), "0") == inputs.values().size()){
+                canMove = true;
+            }
+            if(canMove){
+                if(!inputs.isEmpty() && inputs.get("Start").equals("1")){
+                    start.onClick();
+                }
+            }
+            
             if(player.getX() < 10 && lastHit != 4){
                 angle = 360 - angle - random.nextInt(16); // Set angle to opposite minus a bit
                 lastHit = 4;
@@ -195,51 +207,64 @@ public class GameLoop extends AnimationTimer{
                 canMove = false;
                 return;
             }
-            if(inputs.isEmpty()){ // Controller not connected; use keyboard
-                if(keys.isEmpty()){
-                    canMove = true;
-                }
-                int hor = 1, ver = 1;
-                if(keys.contains("Up")){
-                    hor++;
-                }
-                if(keys.contains("Down")){
-                    hor--;
-                }
-                if(keys.contains("Left")){
-                    ver--;
-                }
-                if(keys.contains("Right")){
-                    ver++;
-                }
-                angle = directions.get(hor).get(ver);
-                if(angle == 360){
-                    speed = 0;
-                }else{
-                    speed = 5;
-                }
-            }else{ // Controller connected; use controller
-                if(((String)inputs.get("joyX")).equals("0") && ((String)inputs.get("joyY")).equals("0")){
-                    canMove = true;
-                }
-                Double hor, ver;
-                hor = Double.parseDouble((String)inputs.get("joyX"));
-                ver = Double.parseDouble((String)inputs.get("joyY"));
-                if(!(hor == 0.0 && ver == 0.0)){
-                    Double temp_angle = Math.toDegrees(Math.atan2(ver, hor));
-                    angle = temp_angle.intValue();
-                    speed = Math.sqrt(Math.pow(hor, 2) + Math.pow(ver, 2));
-                }else{
-                    speed = 0;
-                    canMove = true;
-                }
+            if(keys.isEmpty() && (inputs.isEmpty() || Collections.frequency(inputs.values(), "0") == inputs.values().size())){
+                canMove = true;
             }
             
             if(canMove){
-                if(keys.contains("F12")){
-                    stage++;
-                    first = true;
-                    return;
+                if(inputs.isEmpty()){ // Controller disconnected or off; use keyboard
+                    int hor = 1, ver = 1;
+                    if(keys.contains("Up")){
+                        hor++;
+                    }
+                    if(keys.contains("Down")){
+                        hor--;
+                    }
+                    if(keys.contains("Left")){
+                        ver--;
+                    }
+                    if(keys.contains("Right")){
+                        ver++;
+                    }
+                    if(keys.contains("Esc")){
+                        stage = 0;
+                        first = true;
+                        return;
+                    }
+                    if(keys.contains("F12")){
+                        stage++;
+                        first = true;
+                        return;
+                    }
+                    
+                    angle = directions.get(hor).get(ver);
+                    if(angle == 360){
+                        speed = 0;
+                    }else{
+                        speed = 5;
+                    }
+                }else{ // Controller connected and on; use controller
+                    if(inputs.get("X").equals("1") && inputs.get("Y").equals("1") && inputs.get("Start").equals("1")){
+                        stage++;
+                        first = true;
+                        return;
+                    }
+                    if(inputs.get("Start").equals("1")){
+                        stage = 0;
+                        first = true;
+                        return;
+                    }
+                    
+                    Double hor, ver;
+                    hor = Double.parseDouble((String)inputs.get("joyX"));
+                    ver = Double.parseDouble((String)inputs.get("joyY"));
+                    if(!(hor == 0.0 && ver == 0.0)){
+                        angle = (int)Math.toDegrees(Math.atan2(hor, ver));
+                        speed = Math.sqrt(Math.pow(hor, 2) + Math.pow(ver, 2)) * 0.05;
+                    }else{
+                        speed = 0;
+                        canMove = true;
+                    }
                 }
                 
                 player.setFacing(angle);
@@ -263,7 +288,7 @@ public class GameLoop extends AnimationTimer{
                 err = "";
                 first = false;
             }
-            if(keys.isEmpty()){
+            if(keys.isEmpty() && Collections.frequency(inputs.values(), "0") == inputs.values().size()){
                 canMove = true;
             }
             if(canMove){

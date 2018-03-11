@@ -4,10 +4,12 @@ import java.util.Scanner;
 import com.fazecast.jSerialComm.*;
 import java.util.HashMap;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
-public class Communicator {
+public class Communicator extends Thread{
     private SerialPort serialPort;
-    private Scanner data;
+    private Scanner scanner;
+    private String data;
     private HashMap<String, String> buttons;
     private final Gson gson;
     
@@ -69,19 +71,32 @@ public class Communicator {
         }
         
         serialPort.setComPortTimeouts(timeout, 0, 0);
-        data = new Scanner(serialPort.getInputStream());
+        scanner = new Scanner(serialPort.getInputStream());
+        data = "";
         
+        System.out.println("Connection successful");
         return true;
     }
     
-    public HashMap receive(){
-        try{
-            buttons = gson.fromJson(data.nextLine(), HashMap.class);
-        }catch(NullPointerException e){
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        
+    public HashMap<String, String> receive(){
         return buttons;
     }
+
+    @Override
+    public void run(){
+        connect();
+        while(true){
+            try{
+                data = scanner.nextLine();
+                if(data.equals("OFF")){
+                    buttons = new HashMap();
+                }else{
+                    buttons = gson.fromJson(scanner.nextLine(), HashMap.class);
+                }
+            }catch(NullPointerException e){
+            }catch(JsonSyntaxException e){
+                System.out.println(e.getMessage());
+            }
+        }
+    }  
 }
