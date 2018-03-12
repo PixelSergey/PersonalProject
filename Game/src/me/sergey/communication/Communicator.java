@@ -89,7 +89,7 @@ public class Communicator extends Thread{
             try{
                 data = scanner.nextLine();
                 if(data.equals("OFF")){
-                    buttons = new HashMap();
+                    buttons = new HashMap<>();
                 }else{
                     buttons = gson.fromJson(scanner.nextLine(), HashMap.class);
                 }

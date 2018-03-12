@@ -1,5 +1,6 @@
 package me.sergey.sprites;
 
+import java.util.ArrayList;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -12,17 +13,25 @@ public class Sprite extends Base{
     private int angle;
     private Rotate r;
     private PixelReader sprReader;
+    private ArrayList<Sprite> projectiles;
+    private int ammo;
     
     public Sprite(GraphicsContext gc, String path){
         this(gc, path, -1, -1);
     }
     
-    public Sprite(GraphicsContext gc, String path, double x, double y) {
+    public Sprite(GraphicsContext gc, String path, double x, double y){
+        this(gc, path, x, y, 90);
+    }
+    
+    public Sprite(GraphicsContext gc, String path, double x, double y, int angle){
         super(gc, path, x, y);
         imgView = new ImageView();
         imgView.setImage(img);
-        angle = 90;
+        projectiles = new ArrayList<>();
         sprReader = img.getPixelReader();
+        this.angle = angle;
+        ammo = 10;
     }
     
     public int getFacing(){
@@ -46,8 +55,37 @@ public class Sprite extends Base{
         sprReader = img.getPixelReader();
     }
     
+    public int getAmmo(){
+        return ammo;
+    }
+    
+    public void setAmmo(int ammo){
+        this.ammo = ammo;
+    }
+    
+    public void fire(){
+        if(ammo > 0){
+            projectiles.add(new Sprite(gc, "/assets/projectile.png", getX(true), getY(true), angle));
+            ammo--;
+        }
+    }
+    
+    public void halt(){
+        projectiles.clear();
+        ammo = 10;
+    }
+    
     @Override
     public void draw(){
+        ArrayList<Sprite> toRemove = new ArrayList<>();
+        for(Sprite projectile : projectiles){
+            projectile.move(projectile.getFacing(), 12);
+            projectile.draw();
+            if(projectile.getX() <= 10 || projectile.getX() + projectile.getImg().getWidth() >= gc.getCanvas().getWidth() - 10 || projectile.getY() <= 10 || projectile.getY() + projectile.getImg().getHeight() >= gc.getCanvas().getHeight() - 10){
+                toRemove.add(projectile);
+            }
+        }
+        projectiles.removeAll(toRemove);
         if(x >= 0 && y >= 0){
             gc.save();
             r = new Rotate(angle, x+img.getWidth()/2, y+img.getHeight()/2); // Set pivot around centerpoint

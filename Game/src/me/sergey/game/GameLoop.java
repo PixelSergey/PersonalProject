@@ -44,6 +44,7 @@ public class GameLoop extends AnimationTimer{
     private Image background;
     private boolean first;
     private boolean canMove;
+    private boolean canFire;
     private String playerName;
     private String err;
     private HashMap<String, Double> leaderboard;
@@ -171,7 +172,7 @@ public class GameLoop extends AnimationTimer{
                 canMove = true;
             }
             if(canMove){
-                if(!inputs.isEmpty() && inputs.get("Start").equals("1")){
+                if(!inputs.isEmpty() && inputs.get("Start").equals("1") || keys.contains("Enter")){
                     start.onClick();
                 }
             }
@@ -200,15 +201,22 @@ public class GameLoop extends AnimationTimer{
         
         else if(stage > 0){ // Game Logic
             elapsed = (nanos-startNanos)/1_000_000_000.0;
+            gc.setFont(Font.font("Lucidia Fax", 18));
+            gc.setFill(Color.color(1, 1, 1));
+            gc.fillText("Ammo: " + player.getAmmo(), 10, 20);
+            gc.fillText("Score: " + elapsed, 10, 34);
+            
             if(first){ // Check whether a new stage just loaded
                 player.setXY(75, 350);
                 player.setFacing(90);
                 first = false;
                 canMove = false;
+                canFire = false;
                 return;
             }
             if(keys.isEmpty() && (inputs.isEmpty() || Collections.frequency(inputs.values(), "0") == inputs.values().size())){
                 canMove = true;
+                canFire = true;
             }
             
             if(canMove){
@@ -226,13 +234,23 @@ public class GameLoop extends AnimationTimer{
                     if(keys.contains("Right")){
                         ver++;
                     }
+                    if(keys.contains("Space")){
+                        if(canFire){
+                            player.fire();
+                            canFire = false;
+                        }
+                    }else{
+                        canFire = true;
+                    }
                     if(keys.contains("Esc")){
                         stage = 0;
+                        player.halt();
                         first = true;
                         return;
                     }
                     if(keys.contains("F12")){
                         stage++;
+                        player.halt();
                         first = true;
                         return;
                     }
@@ -241,18 +259,28 @@ public class GameLoop extends AnimationTimer{
                     if(angle == 360){
                         speed = 0;
                     }else{
-                        speed = 5;
+                        speed = 7;
                     }
                 }else{ // Controller connected and on; use controller
                     if(inputs.get("X").equals("1") && inputs.get("Y").equals("1") && inputs.get("Start").equals("1")){
                         stage++;
+                        player.halt();
                         first = true;
                         return;
                     }
                     if(inputs.get("Start").equals("1")){
                         stage = 0;
+                        player.halt();
                         first = true;
                         return;
+                    }
+                    if(inputs.get("A").equals("1") || inputs.get("B").equals("1")){
+                        if(canFire){
+                            player.fire();
+                            canFire = false;
+                        }
+                    }else{
+                        canFire = true;
                     }
                     
                     Double hor, ver;
@@ -273,6 +301,7 @@ public class GameLoop extends AnimationTimer{
                 player.move(angle, speed);
                 if(player.touchesColor(background.getPixelReader(), Color.color(0, 1, 0))){
                     stage++;
+                    player.halt();
                     first = true;
                     return;
                 }
@@ -286,9 +315,12 @@ public class GameLoop extends AnimationTimer{
             if(first){
                 playerName = "";
                 err = "";
+                canMove = false;
                 first = false;
             }
-            if(keys.isEmpty() && Collections.frequency(inputs.values(), "0") == inputs.values().size()){
+            if(keys.isEmpty() && inputs.isEmpty()){
+                canMove = true;
+            }else if(keys.isEmpty() && !inputs.isEmpty() && Collections.frequency(inputs.values(), "0") == inputs.values().size()){
                 canMove = true;
             }
             if(canMove){
@@ -321,21 +353,13 @@ public class GameLoop extends AnimationTimer{
                         err = "";
                     }
                     else if(input.equals("Enter")){
-                        err = "";
-                        if(!playerName.equals("")){
-                            leaderboard.put(playerName, elapsed);
-                            try{
-                                write.write(playerName + ":" + elapsed + ";");
-                                write.flush();
-                            }catch(NullPointerException e){
-                            }catch(IOException e){
-                                System.out.println(Arrays.toString(e.getStackTrace()));
-                            }
-                        }
-                        stage = 0;
-                        first = true;
+                        saveQuit();
                         return;
                     }
+                }
+                if(!inputs.isEmpty() && inputs.get("Start").equals("1")){
+                    saveQuit();
+                    return;
                 }
             }
             
@@ -354,7 +378,7 @@ public class GameLoop extends AnimationTimer{
             gc.setFont(Font.font("Lucida Fax", 20));
             gc.fillText("Score: " + elapsed, 310, 322);
             
-            List<Double> scores = new ArrayList(leaderboard.values());
+            List<Double> scores = new ArrayList<>(leaderboard.values());
             Collections.sort(scores);
             scores = scores.subList(0, Math.min(6, scores.size()));
             for(Double score : scores){
@@ -369,5 +393,21 @@ public class GameLoop extends AnimationTimer{
                 }
             }
         }
+    }
+    
+    public void saveQuit(){
+        err = "";
+        if(!playerName.equals("")){
+            leaderboard.put(playerName, elapsed);
+            try{
+                write.write(playerName + ":" + elapsed + ";");
+                write.flush();
+            }catch(NullPointerException e){
+            }catch(IOException e){
+                System.out.println(Arrays.toString(e.getStackTrace()));
+            }
+        }
+        stage = 0;
+        first = true;
     }
 }
