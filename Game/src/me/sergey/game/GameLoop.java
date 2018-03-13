@@ -20,6 +20,7 @@ import javafx.scene.text.Font;
 import me.sergey.communication.Communicator;
 import me.sergey.sprites.Sprite;
 import me.sergey.sprites.GButton;
+import me.sergey.sprites.Player;
 
 public class GameLoop extends AnimationTimer{
     private long startNanos;
@@ -29,9 +30,11 @@ public class GameLoop extends AnimationTimer{
     private final GButton connect;
     private final GButton start;
     private final GButton quit;
-    private final Sprite player;
+    private final Player player;
+    private final Player enemy;
     private final List<List<Integer>> directions;
     private final Random random;
+    private final HashMap<Integer, List<Integer>> enemyPositions;
     private FileWriter write;
     private FileReader read;
     private int stage;
@@ -40,6 +43,7 @@ public class GameLoop extends AnimationTimer{
     private double elapsed;
     private int angle;
     private int lastHit;
+    private int timeOffset;
     private double speed;
     private Image background;
     private boolean first;
@@ -104,7 +108,8 @@ public class GameLoop extends AnimationTimer{
             read = null;
         }
         
-        player = new Sprite(gc, "/assets/player.png");
+        player = new Player(gc, "/assets/player.png");
+        enemy = new Player(gc, "/assets/enemy.png", -1, -1, 90, -1);
         
         connect = new GButton(gc, "/assets/connect.png", 500, 525){
             @Override
@@ -118,6 +123,7 @@ public class GameLoop extends AnimationTimer{
             public void onClick(){
                 stage = 1;
                 first = true;
+                timeOffset = 0;
                 startNanos = System.nanoTime();
             }
         };
@@ -133,6 +139,17 @@ public class GameLoop extends AnimationTimer{
                     Arrays.asList(225, 180, 135),
                     Arrays.asList(270, 360, 90),
                     Arrays.asList(315, 0, 45));
+        
+        enemyPositions = new HashMap(){
+            {
+                put(3, Arrays.asList(480, 300));
+                put(4, Arrays.asList(425, 300));
+                put(5, Arrays.asList(885, 300));
+                put(6, Arrays.asList(700, 175));
+                put(7, Arrays.asList(315, 515));
+                put(8, Arrays.asList(500, 600));
+            }
+        };
         
         random = new Random();
         first = true;
@@ -200,11 +217,12 @@ public class GameLoop extends AnimationTimer{
         }
         
         else if(stage > 0){ // Game Logic
-            elapsed = (nanos-startNanos)/1_000_000_000.0;
+            elapsed = (nanos-startNanos)/1_000_000_000.0 - timeOffset;
             gc.setFont(Font.font("Lucidia Fax", 18));
             gc.setFill(Color.color(1, 1, 1));
             gc.fillText("Ammo: " + player.getAmmo(), 10, 20);
-            gc.fillText("Score: " + elapsed, 10, 34);
+            gc.fillText("Health: " + player.getHealth(), 100, 20);
+            gc.fillText("Score: " + elapsed, 10, 38);
             
             if(first){ // Check whether a new stage just loaded
                 player.setXY(75, 350);
@@ -219,6 +237,15 @@ public class GameLoop extends AnimationTimer{
                 canFire = true;
             }
             
+            if(enemyPositions.containsKey(stage) && enemy.getHealth() != 0){
+                enemy.setXY(enemyPositions.get(stage).get(0), enemyPositions.get(stage).get(1), true);
+                enemy.setFacing((int)Math.toDegrees(Math.atan2(enemy.getY() - player.getY(), enemy.getX() - player.getX())) - 90);
+                enemy.draw();
+                if(random.nextInt(125) == 0){
+                    enemy.fire();
+                }
+            }
+
             if(canMove){
                 if(inputs.isEmpty()){ // Controller disconnected or off; use keyboard
                     int hor = 1, ver = 1;
@@ -245,12 +272,15 @@ public class GameLoop extends AnimationTimer{
                     if(keys.contains("Esc")){
                         stage = 0;
                         player.halt();
+                        enemy.halt();
                         first = true;
                         return;
                     }
                     if(keys.contains("F12")){
                         stage++;
                         player.halt();
+                        enemy.halt();
+                        enemy.setHealth(100);
                         first = true;
                         return;
                     }
@@ -265,12 +295,15 @@ public class GameLoop extends AnimationTimer{
                     if(inputs.get("X").equals("1") && inputs.get("Y").equals("1") && inputs.get("Start").equals("1")){
                         stage++;
                         player.halt();
+                        enemy.halt();
+                        enemy.setHealth(100);
                         first = true;
                         return;
                     }
                     if(inputs.get("Start").equals("1")){
                         stage = 0;
                         player.halt();
+                        enemy.halt();
                         first = true;
                         return;
                     }
@@ -302,6 +335,8 @@ public class GameLoop extends AnimationTimer{
                 if(player.touchesColor(background.getPixelReader(), Color.color(0, 1, 0))){
                     stage++;
                     player.halt();
+                    enemy.halt();
+                    enemy.setHealth(100);
                     first = true;
                     return;
                 }
@@ -310,6 +345,38 @@ public class GameLoop extends AnimationTimer{
                 }
             }
             player.draw();
+            
+            if(enemy.getHealth() != 0){
+                ArrayList<Sprite> toRemove = new ArrayList<>();
+                for(Sprite projectile : enemy.getProjectiles()){
+                    if(player.touches(projectile)){
+                        System.out.println("Player damaged!");
+                        timeOffset -= 2;
+                        toRemove.add(projectile);
+                        player.damage(20);
+                        if(player.getHealth() == 0){
+                            stage = -2;
+                            player.halt();
+                            enemy.halt();
+                            enemy.setHealth(100);
+                            first = true;
+                            return;
+                        }
+                    }
+                }
+                enemy.removeProjectiles(toRemove);
+                toRemove.clear();
+                for(Sprite projectile : player.getProjectiles()){
+                    if(enemy.touches(projectile)){
+                        System.out.println("Enemy killed!");
+                        timeOffset += 3;
+                        toRemove.add(projectile);
+                        enemy.damage(100);
+                    }
+                }
+                player.removeProjectiles(toRemove);
+                toRemove.clear();
+            }
             
         }else if(stage == -1){ // Victory
             if(first){
@@ -392,6 +459,28 @@ public class GameLoop extends AnimationTimer{
                     }
                 }
             }
+            
+        }else if(stage == -2){ // Game over
+            if(first){
+                canMove = false;
+                first = false;
+            }
+            if(keys.isEmpty() && inputs.isEmpty()){
+                canMove = true;
+            }else if(keys.isEmpty() && !inputs.isEmpty() && Collections.frequency(inputs.values(), "0") == inputs.values().size()){
+                canMove = true;
+            }
+            if(canMove){
+                if(inputs.isEmpty() && keys.contains("Enter") || !inputs.isEmpty() && inputs.get("Start").equals("1")){
+                    stage = 0;
+                    lastHit = -1;
+                    first = true;
+                    return;
+                }
+            }
+            
+            gc.setFont(Font.font("Lucida Fax", 26));
+            gc.fillText("Score: " + elapsed, 310, 322);
         }
     }
     
@@ -408,6 +497,7 @@ public class GameLoop extends AnimationTimer{
             }
         }
         stage = 0;
+        lastHit = -1;
         first = true;
     }
 }

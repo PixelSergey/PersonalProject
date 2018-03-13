@@ -1,6 +1,5 @@
 package me.sergey.sprites;
 
-import java.util.ArrayList;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -9,12 +8,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 
 public class Sprite extends Base{
-    private ImageView imgView;
-    private int angle;
-    private Rotate r;
-    private PixelReader sprReader;
-    private ArrayList<Sprite> projectiles;
-    private int ammo;
+    protected ImageView imgView;
+    protected int angle;
+    protected Rotate r;
+    protected PixelReader sprReader;
     
     public Sprite(GraphicsContext gc, String path){
         this(gc, path, -1, -1);
@@ -28,10 +25,8 @@ public class Sprite extends Base{
         super(gc, path, x, y);
         imgView = new ImageView();
         imgView.setImage(img);
-        projectiles = new ArrayList<>();
         sprReader = img.getPixelReader();
         this.angle = angle;
-        ammo = 10;
     }
     
     public int getFacing(){
@@ -55,37 +50,8 @@ public class Sprite extends Base{
         sprReader = img.getPixelReader();
     }
     
-    public int getAmmo(){
-        return ammo;
-    }
-    
-    public void setAmmo(int ammo){
-        this.ammo = ammo;
-    }
-    
-    public void fire(){
-        if(ammo > 0){
-            projectiles.add(new Sprite(gc, "/assets/projectile.png", getX(true), getY(true), angle));
-            ammo--;
-        }
-    }
-    
-    public void halt(){
-        projectiles.clear();
-        ammo = 10;
-    }
-    
     @Override
     public void draw(){
-        ArrayList<Sprite> toRemove = new ArrayList<>();
-        for(Sprite projectile : projectiles){
-            projectile.move(projectile.getFacing(), 12);
-            projectile.draw();
-            if(projectile.getX() <= 10 || projectile.getX() + projectile.getImg().getWidth() >= gc.getCanvas().getWidth() - 10 || projectile.getY() <= 10 || projectile.getY() + projectile.getImg().getHeight() >= gc.getCanvas().getHeight() - 10){
-                toRemove.add(projectile);
-            }
-        }
-        projectiles.removeAll(toRemove);
         if(x >= 0 && y >= 0){
             gc.save();
             r = new Rotate(angle, x+img.getWidth()/2, y+img.getHeight()/2); // Set pivot around centerpoint
@@ -93,6 +59,15 @@ public class Sprite extends Base{
             gc.drawImage(img, x, y);
             gc.restore();
         }
+    }
+    
+    public boolean touches(Sprite target){
+        return !(
+           target.getX() > this.x + img.getWidth()
+        || target.getX() + target.getImg().getWidth() < this.x
+        || target.getY() > this.y + img.getHeight()
+        || target.getY() + target.getImg().getHeight() < this.y
+                );
     }
     
     public boolean touchesColor(PixelReader reader, Color color){
