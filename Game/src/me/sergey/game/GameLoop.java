@@ -14,6 +14,7 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
@@ -35,6 +36,12 @@ public class GameLoop extends AnimationTimer{
     private final List<List<Integer>> directions;
     private final Random random;
     private final HashMap<Integer, List<Integer>> enemyPositions;
+    private final AudioClip success;
+    private final AudioClip loss;
+    private final AudioClip levelup;
+    private final AudioClip shot;
+    private final AudioClip hit;
+    private final AudioClip kill;
     private FileWriter write;
     private FileReader read;
     private int stage;
@@ -151,6 +158,13 @@ public class GameLoop extends AnimationTimer{
             }
         };
         
+        success = new AudioClip(this.getClass().getResource("/assets/success.mp3").toExternalForm());
+        loss = new AudioClip(this.getClass().getResource("/assets/loss.mp3").toExternalForm());
+        shot = new AudioClip(this.getClass().getResource("/assets/shot.mp3").toExternalForm());
+        levelup = new AudioClip(this.getClass().getResource("/assets/levelup.mp3").toExternalForm());
+        hit = new AudioClip(this.getClass().getResource("/assets/hit.mp3").toExternalForm());
+        kill = new AudioClip(this.getClass().getResource("/assets/kill.mp3").toExternalForm());
+        
         random = new Random();
         first = true;
         lastHit = -1;
@@ -164,6 +178,8 @@ public class GameLoop extends AnimationTimer{
         }catch(IllegalArgumentException e){ // Next stage does not exist (last level cleared/passed)
             stage = -1;
             first = true;
+            levelup.stop();
+            success.play(0.5);
             return;
         }
         gc.drawImage(background, 0, 0);
@@ -243,6 +259,7 @@ public class GameLoop extends AnimationTimer{
                 enemy.draw();
                 if(random.nextInt(125) == 0){
                     enemy.fire();
+                    shot.play(0.5);
                 }
             }
 
@@ -264,6 +281,7 @@ public class GameLoop extends AnimationTimer{
                     if(keys.contains("Space")){
                         if(canFire){
                             player.fire();
+                            shot.play(0.5);
                             canFire = false;
                         }
                     }else{
@@ -310,6 +328,7 @@ public class GameLoop extends AnimationTimer{
                     if(inputs.get("A").equals("1") || inputs.get("B").equals("1")){
                         if(canFire){
                             player.fire();
+                            shot.play(0.5);
                             canFire = false;
                         }
                     }else{
@@ -321,7 +340,7 @@ public class GameLoop extends AnimationTimer{
                     ver = Double.parseDouble((String)inputs.get("joyY"));
                     if(!(hor == 0.0 && ver == 0.0)){
                         angle = (int)Math.toDegrees(Math.atan2(hor, ver));
-                        speed = Math.sqrt(Math.pow(hor, 2) + Math.pow(ver, 2)) * 0.05;
+                        speed = Math.sqrt(Math.pow(hor, 2) + Math.pow(ver, 2)) * 0.075;
                     }else{
                         speed = 0;
                         canMove = true;
@@ -334,6 +353,7 @@ public class GameLoop extends AnimationTimer{
                 player.move(angle, speed);
                 if(player.touchesColor(background.getPixelReader(), Color.color(0, 1, 0))){
                     stage++;
+                    levelup.play(0.5);
                     player.halt();
                     enemy.halt();
                     enemy.setHealth(100);
@@ -350,12 +370,13 @@ public class GameLoop extends AnimationTimer{
                 ArrayList<Sprite> toRemove = new ArrayList<>();
                 for(Sprite projectile : enemy.getProjectiles()){
                     if(player.touches(projectile)){
-                        System.out.println("Player damaged!");
+                        hit.play(0.5);
                         timeOffset -= 2;
                         toRemove.add(projectile);
                         player.damage(20);
-                        if(player.getHealth() == 0){
+                        if(player.getHealth() <= 0){
                             stage = -2;
+                            loss.play(0.5);
                             player.halt();
                             enemy.halt();
                             enemy.setHealth(100);
@@ -368,7 +389,7 @@ public class GameLoop extends AnimationTimer{
                 toRemove.clear();
                 for(Sprite projectile : player.getProjectiles()){
                     if(enemy.touches(projectile)){
-                        System.out.println("Enemy killed!");
+                        kill.play(0.5);
                         timeOffset += 3;
                         toRemove.add(projectile);
                         enemy.damage(100);

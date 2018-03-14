@@ -81,8 +81,11 @@ This will output `Game_fat.jar` in the `/Game/dist` folder.
 
 
 ### Credits
-Credits for external libraries can be found in `/Game/lib/README.md`.
 
+- Credits for external libraries can be found in `/Game/lib/README.md`.
+- All assets were made by me, except:
+  - All .mp3 audio files come from <https://www.zapsplat.com>. Some audio files were modified by me.
+  - The player character comes from <https://opengameart.org/content/spaceship-set-4-pixel-art-space-ships>
 
 [license]: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 [javadl]: http://www.oracle.com/technetwork/articles/javase/jdk-netbeans-jsp-142931.html#close
