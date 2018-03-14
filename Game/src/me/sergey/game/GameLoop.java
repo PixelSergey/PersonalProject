@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,6 +33,7 @@ public class GameLoop extends AnimationTimer{
     private final GButton connect;
     private final GButton start;
     private final GButton quit;
+    private final GButton difficulty_btn;
     private final Player player;
     private final Player enemy;
     private final List<List<Integer>> directions;
@@ -42,12 +45,13 @@ public class GameLoop extends AnimationTimer{
     private final AudioClip shot;
     private final AudioClip hit;
     private final AudioClip kill;
+    private int difficulty;
     private FileWriter write;
     private FileReader read;
     private int stage;
     private HashMap<String, String> inputs;
     private ArrayList<String> keys;
-    private double elapsed;
+    private double score;
     private int angle;
     private int lastHit;
     private int timeOffset;
@@ -142,6 +146,27 @@ public class GameLoop extends AnimationTimer{
             }
         };
         
+        difficulty = 1;
+        difficulty_btn = new GButton(gc, "/assets/easy.png", 865, 720){
+            @Override
+            public void onClick(){
+                difficulty += 1;
+                switch(difficulty){
+                    default:
+                        difficulty = 1;
+                    case 1:
+                        setImg("/assets/easy.png");
+                        break;
+                    case 2:
+                        setImg("/assets/medium.png");
+                        break;
+                    case 3:
+                        setImg("/assets/hard.png");
+                        break;
+                }
+            }
+        };
+        
         directions = Arrays.asList(
                     Arrays.asList(225, 180, 135),
                     Arrays.asList(270, 360, 90),
@@ -230,15 +255,16 @@ public class GameLoop extends AnimationTimer{
             connect.draw();
             start.draw();
             quit.draw();
+            difficulty_btn.draw();
         }
         
         else if(stage > 0){ // Game Logic
-            elapsed = (nanos-startNanos)/1_000_000_000.0 - timeOffset;
+            score = (double)Math.round(((nanos-startNanos)/1_000_000_000.0 - timeOffset)/(difficulty) * 10000d) / 10000d;
             gc.setFont(Font.font("Lucidia Fax", 18));
             gc.setFill(Color.color(1, 1, 1));
             gc.fillText("Ammo: " + player.getAmmo(), 10, 20);
             gc.fillText("Health: " + player.getHealth(), 100, 20);
-            gc.fillText("Score: " + elapsed, 10, 38);
+            gc.fillText("Score: " + score, 10, 38);
             
             if(first){ // Check whether a new stage just loaded
                 player.setXY(75, 350);
@@ -253,11 +279,17 @@ public class GameLoop extends AnimationTimer{
                 canFire = true;
             }
             
-            if(enemyPositions.containsKey(stage) && enemy.getHealth() != 0){
+            if(enemyPositions.containsKey(stage) && enemy.getHealth() != 0 && difficulty != 1){
                 enemy.setXY(enemyPositions.get(stage).get(0), enemyPositions.get(stage).get(1), true);
                 enemy.setFacing((int)Math.toDegrees(Math.atan2(enemy.getY() - player.getY(), enemy.getX() - player.getX())) - 90);
                 enemy.draw();
-                if(random.nextInt(125) == 0){
+                int chance = 0;
+                if(difficulty == 2){
+                    chance = 200;
+                }else if(difficulty == 3){
+                    chance = 125;
+                }
+                if(random.nextInt(chance) == 0){
                     enemy.fire();
                     shot.play(0.5);
                 }
@@ -464,19 +496,19 @@ public class GameLoop extends AnimationTimer{
             gc.fillText(playerName, 250, 450);
             
             gc.setFont(Font.font("Lucida Fax", 20));
-            gc.fillText("Score: " + elapsed, 310, 322);
+            gc.fillText("Score: " + score, 310, 322);
             
             List<Double> scores = new ArrayList<>(leaderboard.values());
             Collections.sort(scores);
             scores = scores.subList(0, Math.min(6, scores.size()));
-            for(Double score : scores){
+            for(Double leaderScore : scores){
                 for(String leader : leaderboard.keySet()){
-                    if(leaderboard.get(leader).equals(score)){
-                        int pos = scores.indexOf(score);
+                    if(leaderboard.get(leader).equals(leaderScore)){
+                        int pos = scores.indexOf(leaderScore);
                         gc.setFont(Font.font("Lucida Fax", 26));
                         gc.fillText(pos+1 + ": " + leader + "\n", 780, 380 + pos * 40 + pos * 25);
                         gc.setFont(Font.font("Lucida Fax", 20));
-                        gc.fillText(score + "\n\n", 780, 380 + pos * 40 + pos * 25 + 25);
+                        gc.fillText(leaderScore + "\n\n", 780, 380 + pos * 40 + pos * 25 + 25);
                     }
                 }
             }
@@ -501,16 +533,16 @@ public class GameLoop extends AnimationTimer{
             }
             
             gc.setFont(Font.font("Lucida Fax", 26));
-            gc.fillText("Score: " + elapsed, 310, 322);
+            gc.fillText("Score: " + score, 310, 322);
         }
     }
     
     public void saveQuit(){
         err = "";
         if(!playerName.equals("")){
-            leaderboard.put(playerName, elapsed);
+            leaderboard.put(playerName, score);
             try{
-                write.write(playerName + ":" + elapsed + ";");
+                write.write(playerName + ":" + score + ";");
                 write.flush();
             }catch(NullPointerException e){
             }catch(IOException e){

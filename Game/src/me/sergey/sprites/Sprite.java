@@ -12,6 +12,7 @@ public class Sprite extends Base{
     protected int angle;
     protected Rotate r;
     protected PixelReader sprReader;
+    protected boolean check;
     
     public Sprite(GraphicsContext gc, String path){
         this(gc, path, -1, -1);
@@ -52,6 +53,7 @@ public class Sprite extends Base{
     
     @Override
     public void draw(){
+        check = true;
         if(x >= 0 && y >= 0){
             gc.save();
             r = new Rotate(angle, x+img.getWidth()/2, y+img.getHeight()/2); // Set pivot around centerpoint
@@ -62,6 +64,10 @@ public class Sprite extends Base{
     }
     
     public boolean touches(Sprite target){
+        if(!check){
+            return false;
+        }
+        check = false;
         return !(
            target.getX() > this.x + img.getWidth()
         || target.getX() + target.getImg().getWidth() < this.x
