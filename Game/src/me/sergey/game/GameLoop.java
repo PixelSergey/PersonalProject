@@ -133,6 +133,8 @@ public class GameLoop extends AnimationTimer{
                 stage = 1;
                 first = true;
                 timeOffset = 0;
+                player.setHealth(100);
+                enemy.setHealth(100);
                 startNanos = System.nanoTime();
             }
         };
